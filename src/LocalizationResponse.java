@@ -26,7 +26,7 @@ public class LocalizationResponse implements Response
    }
 
    // Return an array with position coordinates
-   public double[] getPosition()
+   public Position getPosition()
    {
       Map<String, Object> pose = (Map<String, Object>)data.get("Pose");
       Map<String, Object> position = (Map<String, Object>)pose.get("Position");
@@ -35,7 +35,8 @@ public class LocalizationResponse implements Response
       double y =  (Double)position.get("Y");
       double z =  (Double)position.get("Z");
 
-      return new double[] {x, y, z};
+      Position pos = new Position(x,y);
+      return pos;
    }
 
    // return the robot heading, i.e. in which direction it 'points'

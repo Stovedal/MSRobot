@@ -12,16 +12,11 @@ public class Position
       this.Y = pos[1];
    }
 
-   public Position(double X, double Y, double Z)
+   public Position(double X, double Y)
    {
       this.X = X;
       this.Y = Y;
-      this.Z = Z;
    }
-
-    public void setZ(double Z) {
-        this.Z = Z;
-    }
 
     public void setX(double X) {
         this.X = X;
@@ -33,14 +28,13 @@ public class Position
 
     public double getX() { return X; }
     public double getY() { return Y; }
-    public double getZ() { return Z; }
 
     public double getDistanceTo(Position p)
    {
       return Math.sqrt((X - p.X) * (X - p.X) + (Y - p.Y) * (Y - p.Y));
    }
 
-   // Bearing to another position, realtive to 'North'
+   // Bearing to another position, relative to 'North'
    // Bearing have several meanings, in this case the angle between
    // north and the position p.
    public double getBearingTo(Position p)

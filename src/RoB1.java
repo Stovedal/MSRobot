@@ -1,3 +1,4 @@
+import java.awt.image.DirectColorModel;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
@@ -36,9 +37,10 @@ public class RoB1
     */
    public RoB1(String host, int port)
    {
-      this.host = host;
-      this.port = port;
-      this.robot = this;
+       this.mapper = new ObjectMapper();
+       this.host = host;
+       this.port = port;
+       this.robot = this;
    }
 
 
@@ -60,7 +62,7 @@ public class RoB1
     * @param lr
     * @return coordinates
     */
-   double[] getPosition(LocalizationResponse lr)
+   Position getPosition(LocalizationResponse lr)
    {
       return lr.getPosition();
    }
@@ -125,8 +127,11 @@ public class RoB1
       return r;
    }
 
-    public moveToPos( Step newPos){
-        DifferentialDriveRequest()
+    public void moveToPos(Step newPos) throws Exception {
+        DifferentialDriveRequest dr = new DifferentialDriveRequest();
+        LocalizationResponse lr = new LocalizationResponse();
+        Step startStep = (Step) getResponse(lr);
+        System.out.println(startStep);
     }
 
 }
