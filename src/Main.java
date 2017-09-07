@@ -1,14 +1,74 @@
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 public class Main {
 
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("Hello, world!");
-        StringBuffer position = getPosition();
-        System.out.println(position);
+    public static void main(String[] args) throws Exception {
+        System.out.println("Creating Robot");
+        RoB1 robot = new RoB1("http://127.0.0.1",50000);
+
+        //Read Json into Step-List
+        Gson gson = new Gson();
+        Type listType = new TypeToken<List<Step>>() {}.getType();
+        List<Step> path = gson.fromJson(new FileReader("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json"), listType);
+
+
+
+        System.out.println(path.get(5).getPose().getOrientation().getX());
+
+        System.out.println("Creating response");
+        LocalizationResponse lr = new LocalizationResponse();
+
+        System.out.println("Creating laserResponse");
+        LaserEchoesResponse laser = new LaserEchoesResponse();
+
+        System.out.println("Creating request");
+        DifferentialDriveRequest dr = new DifferentialDriveRequest();
+
+        // set up the request to move in a circle
+        dr.setAngularSpeed(Math.PI * 0.25 );
+        dr.setLinearSpeed(-1);
+
+        System.out.println("Start to move robot");
+        int rc = robot.putRequest(dr);
+        System.out.println("Response code " + rc);
+
+        for (int i = 0; i < 1; i++)
+        {
+            try
+            {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException ex) {}
+
+            // ask the robot about its position and angle
+            robot.getResponse(lr);
+
+            robot.getResponse(laser);
+
+            double angle = robot.getHeadingAngle(lr);
+            System.out.println("heading = " + angle);
+
+            double [] position = robot.getPosition(lr);
+            System.out.println("position = " + position[0] + ", " + position[1]);
+
+            System.out.println("laserechoe " + laser.getEchoes());
+        }
+
+        // set up request to stop the robot
+        dr.setLinearSpeed(0);
+        dr.setAngularSpeed(0);
+
+        System.out.println("Stop robot");
+        rc = robot.putRequest(dr);
+        System.out.println("Response code " + rc);
 
     }
 
