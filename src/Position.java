@@ -1,26 +1,43 @@
 
 public class Position
 {
-   private double x, y;
+    private double X;
+    private double Y;
+    private double Z;
+
 
    public Position(double pos[])
    {
-      this.x = pos[0];
-      this.y = pos[1];
+      this.X = pos[0];
+      this.Y = pos[1];
    }
 
-   public Position(double x, double y)
+   public Position(double X, double Y, double Z)
    {
-      this.x = x;
-      this.y = y;
+      this.X = X;
+      this.Y = Y;
+      this.Z = Z;
    }
 
-   public double getX() { return x; }
-   public double getY() { return y; }
+    public void setZ(double Z) {
+        this.Z = Z;
+    }
 
-   public double getDistanceTo(Position p)
+    public void setX(double X) {
+        this.X = X;
+    }
+
+    public void setY(double Y) {
+        this.Y = Y;
+    }
+
+    public double getX() { return X; }
+    public double getY() { return Y; }
+    public double getZ() { return Z; }
+
+    public double getDistanceTo(Position p)
    {
-      return Math.sqrt((x - p.x) * (x - p.x) + (y - p.y) * (y - p.y));
+      return Math.sqrt((X - p.X) * (X - p.X) + (Y - p.Y) * (Y - p.Y));
    }
 
    // Bearing to another position, realtive to 'North'
@@ -28,6 +45,6 @@ public class Position
    // north and the position p.
    public double getBearingTo(Position p)
    {
-      return Math.atan2(p.y - y, p.x - x);
+      return Math.atan2(p.Y - Y, p.X - X);
    }
 }

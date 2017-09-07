@@ -4,6 +4,7 @@
       <root url="jar://$PROJECT_DIR$/.idea/lib/jackson-annotations-2.0.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/.idea/lib/jackson-core-2.0.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/.idea/lib/jackson-databind-2.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/.idea/lib/gson-2.6.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

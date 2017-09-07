@@ -1,41 +1,44 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 // Jar file for JSON support
 import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.annotation.*;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * TestRobot interfaces to the (real or virtual) robot over a network connection.
  * It uses Java -> JSON -> HttpRequest -> Network -> DssHost32 -> Lokarria(Robulab) -> Core -> MRDS4
- * 
+ *
  * @author thomasj
  */
-public class TestRobot
+public class RoB1
 {
    private String host;                // host and port numbers
    private int port;
    private ObjectMapper mapper;        // maps between JSON and Java structures
-   private TestRobot robot;
+   private RoB1 robot;
+
 
    /**
     * Create a robot connected to host "host" at port "port"
     * @param host normally http://127.0.0.1
     * @param port normally 50000
     */
-   public TestRobot(String host, int port)
+   public RoB1(String host, int port)
    {
       this.host = host;
       this.port = port;
       this.robot = this;
-
-      mapper = new ObjectMapper();
    }
 
    /**
@@ -45,19 +48,32 @@ public class TestRobot
     * @throws Exception   not caught
     */
    public static void main(String[] args) throws Exception
-   {     
-      System.out.println("Creating Robot");
-      TestRobot robot = new TestRobot("http://127.0.0.1", 50000);
+   {
+       System.out.println("Creating Robot");
+       RoB1 robot = new RoB1("http://127.0.0.1",50000);
+       ObjectMapper mapper = new ObjectMapper();
+       Gson gson = new Gson();
+       Type listType = new TypeToken<List<Step>>() {}.getType();
+       //String jsonString  = mapper.readValue(new FileReader("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json"), String.class );
+
+       List<Step> path = gson.fromJson(new FileReader("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json"), listType);
+
+
+
+       System.out.println(path.get(5).getPose().getOrientation().getX());
 
       System.out.println("Creating response");
       LocalizationResponse lr = new LocalizationResponse();
+
+      System.out.println("Creating laserResponse");
+       LaserEchoesResponse laser = new LaserEchoesResponse();
 
       System.out.println("Creating request");
       DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
       // set up the request to move in a circle
-      dr.setAngularSpeed(-3.14);
-      dr.setLinearSpeed(0.0);
+      dr.setAngularSpeed(Math.PI * 0.25 );
+      dr.setLinearSpeed(-1);
 
       System.out.println("Start to move robot");
       int rc = robot.putRequest(dr);
@@ -67,18 +83,22 @@ public class TestRobot
       {
          try
          {
-            Thread.sleep(10000);
+            Thread.sleep(1000);
          }
          catch (InterruptedException ex) {}
 
          // ask the robot about its position and angle
          robot.getResponse(lr);
 
+          robot.getResponse(laser);
+
          double angle = robot.getHeadingAngle(lr);
          System.out.println("heading = " + angle);
 
          double [] position = robot.getPosition(lr);
-         System.out.println("position = " + position[0] + ", " + position[1]); 
+         System.out.println("position = " + position[0] + ", " + position[1]);
+
+          System.out.println("laserechoe " + laser.getEchoes());
       }
 
       // set up request to stop the robot
@@ -113,7 +133,7 @@ public class TestRobot
    {
       return lr.getPosition();
    }
-   
+
 
    /**
     * Send a request to the robot.
@@ -173,6 +193,7 @@ public class TestRobot
 
       return r;
    }
+
 
 }
 
