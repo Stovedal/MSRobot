@@ -16,6 +16,8 @@ import com.fasterxml.jackson.annotation.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import static java.lang.Math.abs;
+
 /**
  * TestRobot interfaces to the (real or virtual) robot over a network connection.
  * It uses Java -> JSON -> HttpRequest -> Network -> DssHost32 -> Lokarria(Robulab) -> Core -> MRDS4
@@ -55,19 +57,32 @@ public class RoB1
        getResponse(lr);
        double e[] = lr.getOrientation();
        double angle = 2 * Math.atan2(e[3], e[0]);
-       return angle * 180 / Math.PI;
+       angle = convertToDegrees(angle);
+       return angle;
+
    }
+
+
+    private double convertToDegrees( double angle ) {
+        angle = Math.toDegrees(angle);
+        if(angle<0){
+            return angle+360;
+        } else {
+            return angle;
+        }
+    }
 
     /**
      * Get Bearing to Point
      * @param
      * @return
      */
-    double getBearingToPoint(Position positionPoint) throws Exception {
-       return getCurrentPosition().getBearingTo(positionPoint);
+    double getBearingToPoint(Position position) throws Exception {
+       return convertToDegrees(getCurrentPosition().getBearingTo(position));
     }
 
-   /**
+
+    /**
     * Extract the current position
     * @param
     * @return Position

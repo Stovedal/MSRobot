@@ -26,8 +26,10 @@ public class Main {
         */
         path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json");
 
-        for(int i = 10; i < path.length; i =  i+10){
-            System.out.println(path[i].getX() + " " + path[i].getY() + " d " + path[i].getDistanceTo(path[i + 10]));
+        int positionsToJump = 50;
+
+        for(int i = positionsToJump; i < path.length; i =  i+positionsToJump){
+            System.out.println(path[i].getX() + " " + path[i-positionsToJump].getY() + " d " + path[i].getDistanceTo(path[i]));
         }
 
         System.out.println("Creating Robot");
@@ -38,27 +40,52 @@ public class Main {
 
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
-        for(int i = 10; i < path.length; i = i+10) {
+        double angleMargin = 5;
+        double distanceMargin = 1;
+
+        for(int i = positionsToJump; i < path.length; i = i+positionsToJump) {
             System.out.println("Start of For");
-            dr.setAngularSpeed(0.1);
+            dr.setAngularSpeed(0.2);
             dr.setLinearSpeed(0);
             robot.putRequest(dr);
-            System.out.println("starting turning whilellooop");
-            while( robot.getBearingToPoint(path[i]) - 3 < robot.getHeadingAngle() && robot.getHeadingAngle() > robot.getBearingToPoint(path[i]) + 3){
-                System.out.println("Turning" + robot.getHeadingAngle());
-                System.out.println("to" + robot.getBearingToPoint(path[i]));
+            System.out.println("starting turning whilelooop");
+            double lowerLimit = robot.getBearingToPoint(path[i]) - angleMargin;
+            double upperLimit = robot.getBearingToPoint(path[i]) + angleMargin;
+            double heading = robot.getHeadingAngle();
+            System.out.println(" boundary 1 " + lowerLimit + " boundary2 " + upperLimit + " heading " + heading);
+            while(checkIfWithinLimits(robot.getHeadingAngle(), robot.getBearingToPoint(path[i]))){
             }
-            System.out.println("Ending turning whilloopp, setting forward ging");
             dr.setAngularSpeed(0);
             dr.setLinearSpeed(0.2);
             robot.putRequest(dr);
-            System.out.println("Sleeping");
-            Thread.sleep(500);
-            System.out.println("waking up");
+            while( robot.getDistanceToPosition(path[i]) > distanceMargin ){
+                System.out.println("movin " + robot.getDistanceToPosition(path[i]));
+            }
 
         }
+        dr.setAngularSpeed(0);
+        robot.putRequest(dr);
 
 
+    }
+
+    /**
+     * Checks wether the given
+     * @param headingAngle
+     * @param bearingAngle
+     * @return boolean
+     */
+    private static boolean checkIfWithinLimits(double headingAngle, double bearingAngle){
+        double margin = 5;
+        double lowerLimit = bearingAngle - margin;
+        double upperLimit = bearingAngle + margin;
+        boolean condition = Double.compare(headingAngle, lowerLimit) > 0;
+        System.out.println(condition + " heading " + headingAngle + " lowerlimit " + lowerLimit);
+        if(Double.compare(headingAngle, lowerLimit) > 0 && Double.compare(headingAngle, upperLimit) < 0 ){
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private static Position[] readPath( String pathString ) throws Exception {
@@ -75,8 +102,15 @@ public class Main {
         {
             Map<String, Object> pose = (Map<String, Object>)point.get("Pose");
             Map<String, Object> aPosition = (Map<String, Object>)pose.get("Position");
+            Map<String, Object> anOrientation = (Map<String, Object>)pose.get("Orientation");
             double x = (Double)aPosition.get("X");
             double y = (Double)aPosition.get("Y");
+            double Ox = (Double) anOrientation.get("X");
+            double Oy = (Double) anOrientation.get("Y");
+            double Oz = (Double) anOrientation.get("Z");
+            double Ow = (Double) anOrientation.get("W");
+            Orientation orientation = new Orientation(Ow, Ox, Oy, Oz);
+
             path[index] = new Position(x, y);
             index++;
         }

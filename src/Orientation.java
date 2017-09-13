@@ -18,6 +18,10 @@ public class Orientation {
         return W;
     }
 
+    public double[] getAsArray() {
+        return new double[]{this.W, this.X, this.Y, this.Z};
+    }
+
     public void setW(double W) {
         this.W = W;
     }
