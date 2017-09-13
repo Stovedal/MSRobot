@@ -46,29 +46,82 @@ public class RoB1
 
    /**
     * Extract the robot heading from the response
-    * @param lr
+    * @param
     * @return angle in degrees
     */
-   double getHeadingAngle(LocalizationResponse lr)
+   double getHeadingAngle() throws Exception
    {
-      double e[] = lr.getOrientation();
-
-      double angle = 2 * Math.atan2(e[3], e[0]);
-      return angle * 180 / Math.PI;
+       LocalizationResponse lr = new LocalizationResponse();
+       getResponse(lr);
+       double e[] = lr.getOrientation();
+       double angle = 2 * Math.atan2(e[3], e[0]);
+       return angle * 180 / Math.PI;
    }
 
+    /**
+     * Get Bearing to Point
+     * @param
+     * @return
+     */
+    double getBearingToPoint(Position positionPoint) throws Exception {
+       return getCurrentPosition().getBearingTo(positionPoint);
+    }
+
    /**
-    * Extract the position
-    * @param lr
-    * @return coordinates
+    * Extract the current position
+    * @param
+    * @return Position
     */
-   Position getPosition(LocalizationResponse lr)
+   Position getCurrentPosition() throws Exception
    {
-      return lr.getPosition();
+       LocalizationResponse lr = new LocalizationResponse();
+       getResponse(lr);
+       return lr.getPosition();
    }
 
+    /**
+     * Extract the current HeadingAngle
+     * @param
+     * @return Position
+     */
+    double getCurrentHeadingAngle() throws Exception
+    {
+        LocalizationResponse lr = new LocalizationResponse();
+        getResponse(lr);
+        return lr.getHeadingAngle();
+    }
 
-   /**
+    /**
+     * Get Distance to point
+     * @param
+     * @return double
+     */
+    double getDistanceToPosition(Position positionPoint) throws Exception {
+        return getCurrentPosition().getDistanceTo(positionPoint);
+
+    }
+
+    /**
+     * Turn to angle
+     */
+
+    void turnTo(double angle) throws Exception {
+        double currentHeadingAngle = getCurrentHeadingAngle();
+        DifferentialDriveRequest dr = new DifferentialDriveRequest();
+        dr.setAngularSpeed(0.2);
+        dr.setLinearSpeed(0);
+        putRequest(dr);
+        while(currentHeadingAngle > angle - Math.PI*0.05 &&  currentHeadingAngle < angle + Math.PI*0.05){
+            System.out.println("Turning " + currentHeadingAngle + " to " + angle);
+            currentHeadingAngle = getCurrentHeadingAngle();
+        }
+        dr.setAngularSpeed(0);
+        putRequest(dr);
+        System.out.println("Stopping " + currentHeadingAngle + " " + angle);
+    }
+
+
+    /**
     * Send a request to the robot.
     * @param r request to send
     * @return response code from the connection (the web server)
@@ -111,7 +164,6 @@ public class RoB1
    public Response getResponse(Response r) throws Exception
    {
       URL url = new URL(host + ":" + port + r.getPath());
-      System.out.println(url);
 
       // open a connection to the web server and then get the resulting data
       URLConnection connection = url.openConnection();

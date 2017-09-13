@@ -6,6 +6,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,7 @@ public class Main {
     private static Position[] path;
 
     public static void main(String[] args) throws Exception {
-        System.out.println("Creating Robot");
-        RoB1 robot = new RoB1("http://127.0.0.1",50000);
+
 
         /*
         //Read Json into Step-List
@@ -26,51 +26,39 @@ public class Main {
         */
         path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json");
 
+        for(int i = 10; i < path.length; i =  i+10){
+            System.out.println(path[i].getX() + " " + path[i].getY() + " d " + path[i].getDistanceTo(path[i + 10]));
+        }
 
-        System.out.println("Creating response");
-        LocalizationResponse lr = new LocalizationResponse();
+        System.out.println("Creating Robot");
+        RoB1 robot = new RoB1("http://127.0.0.1",50000);
 
-        System.out.println("Creating Localizationrequest");
-        robot.getResponse(lr);
-        System.out.println("Received LR " + lr.getPosition().getX() );
-        /*
+        System.out.println("GET HEADING " + robot.getCurrentHeadingAngle());
+        System.out.println("GET BEARING" + robot.getBearingToPoint(path[0]));
+
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
-        // set up the request to move in a circle
-        dr.setAngularSpeed(Math.PI * 0.25 );
-        dr.setLinearSpeed(-1);
-
-        System.out.println("Start to move robot");
-        int rc = robot.putRequest(dr);
-        System.out.println("Response code " + rc);
-
-        for (int i = 0; i < 1; i++)
-        {
-            try
-            {
-                Thread.sleep(1000);
+        for(int i = 10; i < path.length; i = i+10) {
+            System.out.println("Start of For");
+            dr.setAngularSpeed(0.1);
+            dr.setLinearSpeed(0);
+            robot.putRequest(dr);
+            System.out.println("starting turning whilellooop");
+            while( robot.getBearingToPoint(path[i]) - 3 < robot.getHeadingAngle() && robot.getHeadingAngle() > robot.getBearingToPoint(path[i]) + 3){
+                System.out.println("Turning" + robot.getHeadingAngle());
+                System.out.println("to" + robot.getBearingToPoint(path[i]));
             }
-            catch (InterruptedException ex) {}
-
-            // ask the robot about its position and angle
-            robot.getResponse(lr);
-
-            double angle = robot.getHeadingAngle(lr);
-            System.out.println("heading = " + angle);
-
-            double [] position = robot.getPosition(lr);
-            System.out.println("position = " + position[0] + ", " + position[1]);
+            System.out.println("Ending turning whilloopp, setting forward ging");
+            dr.setAngularSpeed(0);
+            dr.setLinearSpeed(0.2);
+            robot.putRequest(dr);
+            System.out.println("Sleeping");
+            Thread.sleep(500);
+            System.out.println("waking up");
 
         }
 
-        // set up request to stop the robot
-        dr.setLinearSpeed(0);
-        dr.setAngularSpeed(0);
 
-        System.out.println("Stop robot");
-        rc = robot.putRequest(dr);
-        System.out.println("Response code " + rc);
-        */
     }
 
     private static Position[] readPath( String pathString ) throws Exception {
