@@ -1,14 +1,7 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
-import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -40,20 +33,15 @@ public class Main {
 
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
 
-        double angleMargin = 5;
         double distanceMargin = 1;
 
         for(int i = positionsToJump; i < path.length; i = i+positionsToJump) {
             System.out.println("Start of For");
-            dr.setAngularSpeed(0.2);
+            dr.setAngularSpeed(calculateTurn(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
             dr.setLinearSpeed(0);
             robot.putRequest(dr);
             System.out.println("starting turning whilelooop");
-            double lowerLimit = robot.getBearingToPoint(path[i]) - angleMargin;
-            double upperLimit = robot.getBearingToPoint(path[i]) + angleMargin;
-            double heading = robot.getHeadingAngle();
-            System.out.println(" boundary 1 " + lowerLimit + " boundary2 " + upperLimit + " heading " + heading);
-            while(checkIfWithinLimits(robot.getHeadingAngle(), robot.getBearingToPoint(path[i]))){
+            while(checkHeading(robot.getHeadingAngle(), robot.getBearingToPoint(path[i]))){
             }
             dr.setAngularSpeed(0);
             dr.setLinearSpeed(0.2);
@@ -70,21 +58,52 @@ public class Main {
     }
 
     /**
-     * Checks wether the given
-     * @param headingAngle
-     * @param bearingAngle
+     * Checks wether the given headingAngle is within an acceptable margin of the bearingAngle
+     * @param headingAngle double
+     * @param bearingAngle double
      * @return boolean
      */
-    private static boolean checkIfWithinLimits(double headingAngle, double bearingAngle){
+    private static boolean checkHeading(double headingAngle, double bearingAngle){
         double margin = 5;
-        double lowerLimit = bearingAngle - margin;
-        double upperLimit = bearingAngle + margin;
-        boolean condition = Double.compare(headingAngle, lowerLimit) > 0;
-        System.out.println(condition + " heading " + headingAngle + " lowerlimit " + lowerLimit);
-        if(Double.compare(headingAngle, lowerLimit) > 0 && Double.compare(headingAngle, upperLimit) < 0 ){
-            return false;
+        double lowerLimit = wrapAngle(bearingAngle - margin);
+        double upperLimit = wrapAngle(bearingAngle + margin);
+        return checkIfWithinLimits(headingAngle, lowerLimit, upperLimit);
+    }
+
+    /**
+     * Wraps an angle to the 0-360 degree spectrum
+     * @param limit double
+     * @return double
+     */
+    private static double wrapAngle( double limit){
+        if(Double.compare(limit, 0) < 0){
+            limit = limit + 360;
+            return limit;
+        }
+        if(Double.compare(limit, 360) > 0){
+            limit = limit - 360;
+            return limit;
+        }
+        return limit;
+    }
+
+
+    private static double calculateTurn( double headingAngle, double bearingAngle){
+        double speed = 0.2;
+        double oppositeHeadingAngle = wrapAngle(headingAngle-180);
+        if(checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
+            return -speed;
         } else {
-            return true;
+            return speed;
+        }
+
+    }
+
+    private static boolean checkIfWithinLimits(double angle, double lowerLimit, double upperLimit ){
+        if(Double.compare(lowerLimit, upperLimit) > 0){
+            return !(Double.compare(angle, lowerLimit) > 0 || Double.compare(angle, upperLimit) < 0);
+        } else {
+            return !(Double.compare(angle, lowerLimit) > 0 && Double.compare(angle, upperLimit) < 0);
         }
     }
 
