@@ -10,48 +10,30 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
+        path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\SofaAndBench.json");
 
-        /*
-        //Read Json into Step-List
-        Gson gson = new Gson();
-        Type listType = new TypeToken<List<Step>>() {}.getType();
-        List<Step> path = gson.fromJson(new FileReader("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json"), listType);
-        */
-        path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\path.json");
+        int positionsToJump = 10;
+        double lookAheadDistance = 1;
 
-        int positionsToJump = 50;
-
-        for(int i = positionsToJump; i < path.length; i =  i+positionsToJump){
-            System.out.println(path[i].getX() + " " + path[i-positionsToJump].getY() + " d " + path[i].getDistanceTo(path[i]));
-        }
-
-        System.out.println("Creating Robot");
         RoB1 robot = new RoB1("http://127.0.0.1",50000);
-
-        System.out.println("GET HEADING " + robot.getCurrentHeadingAngle());
-        System.out.println("GET BEARING" + robot.getBearingToPoint(path[0]));
-
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
-
-        double distanceMargin = 1;
 
         for(int i = positionsToJump; i < path.length; i = i+positionsToJump) {
             System.out.println("Start of For");
             dr.setAngularSpeed(calculateTurn(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
-            dr.setLinearSpeed(0);
+            dr.setLinearSpeed(0.5);
             robot.putRequest(dr);
-            System.out.println("starting turning whilelooop");
-            while(checkHeading(robot.getHeadingAngle(), robot.getBearingToPoint(path[i]))){
+            while(!checkHeading(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])) && robot.getDistanceToPosition(path[i]) > lookAheadDistance){
             }
             dr.setAngularSpeed(0);
-            dr.setLinearSpeed(0.2);
             robot.putRequest(dr);
-            while( robot.getDistanceToPosition(path[i]) > distanceMargin ){
-                System.out.println("movin " + robot.getDistanceToPosition(path[i]));
+            while( robot.getDistanceToPosition(path[i]) > lookAheadDistance ){
             }
 
         }
+        System.out.println("done");
         dr.setAngularSpeed(0);
+        dr.setLinearSpeed(0);
         robot.putRequest(dr);
 
 
@@ -89,9 +71,9 @@ public class Main {
 
 
     private static double calculateTurn( double headingAngle, double bearingAngle){
-        double speed = 0.2;
+        double speed = 1;
         double oppositeHeadingAngle = wrapAngle(headingAngle-180);
-        if(checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
+        if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
             return -speed;
         } else {
             return speed;
@@ -99,11 +81,18 @@ public class Main {
 
     }
 
+    /**
+     * Checks if angle is within limits
+     * @param angle double
+     * @param lowerLimit double
+     * @param upperLimit double
+     * @return boolean
+     */
     private static boolean checkIfWithinLimits(double angle, double lowerLimit, double upperLimit ){
         if(Double.compare(lowerLimit, upperLimit) > 0){
-            return !(Double.compare(angle, lowerLimit) > 0 || Double.compare(angle, upperLimit) < 0);
+            return (Double.compare(angle, lowerLimit) > 0 || Double.compare(angle, upperLimit) < 0);
         } else {
-            return !(Double.compare(angle, lowerLimit) > 0 && Double.compare(angle, upperLimit) < 0);
+            return (Double.compare(angle, lowerLimit) > 0 && Double.compare(angle, upperLimit) < 0);
         }
     }
 
