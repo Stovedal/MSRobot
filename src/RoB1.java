@@ -1,22 +1,9 @@
-import java.awt.image.DirectColorModel;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-
-// Jar file for JSON support
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.annotation.*;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import static java.lang.Math.abs;
 
 /**
  * TestRobot interfaces to the (real or virtual) robot over a network connection.
@@ -26,15 +13,17 @@ import static java.lang.Math.abs;
  */
 public class RoB1
 {
-    private String host;                // host and port numbers
+    private String host;
     private int port;
-    private ObjectMapper mapper;        // maps between JSON and Java structures
+    private ObjectMapper mapper;
     private RoB1 robot;
     private double lookAheadDistance;
     private int positionsToSkip;
     private double headingMargin;
     private double linearSpeed;
     private double angularSpeed;
+    private LocalizationResponse lr;
+    private DifferentialDriveRequest dr;
 
 
    /**
@@ -50,9 +39,11 @@ public class RoB1
        this.robot = this;
        this.positionsToSkip = 5;
        this.headingMargin = 5;
-       this.lookAheadDistance = 1;
-       this.linearSpeed = 0.5;
-       this.angularSpeed = 0.5;
+       this.lookAheadDistance = 0.5;
+       this.linearSpeed = 1;
+       this.angularSpeed = 1;
+       this.lr = new LocalizationResponse();
+       this.dr = new DifferentialDriveRequest();
 
    }
 
@@ -61,18 +52,23 @@ public class RoB1
      * @param path Position[]
      */
     public void run( Position[] path ) throws Exception {
-        DifferentialDriveRequest dr = new DifferentialDriveRequest();
-        for(int i = positionsToSkip; i < path.length; i = i+positionsToSkip) {
+        System.out.println("Starting");
+        for(int i = positionsToSkip+20; i < path.length; i = i+positionsToSkip) {
             dr.setAngularSpeed(calculateTurn(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
-            dr.setLinearSpeed(linearSpeed);
             robot.putRequest(dr);
+
             //while angle isn't accurate enough, turn in most sufficient direction
-            while(!checkHeading(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])) && robot.getDistanceToPosition(path[i]) > lookAheadDistance){
+            while(!checkIfWithinMargin(robot.getHeadingAngle(), robot.getBearingToPoint(path[i]), headingMargin)
+                    &&
+                    robot.getDistanceToPosition(path[i]) > lookAheadDistance ){
+                robot.putRequest(adjustLinearSpeed(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
             }
+
             dr.setAngularSpeed(0);
             robot.putRequest(dr);
             //When angle is accurate enough, move forward until next position is within lookAheadDistance
             while( robot.getDistanceToPosition(path[i]) > lookAheadDistance ){
+                dr.setLinearSpeed(3);
             }
 
         }
@@ -82,6 +78,26 @@ public class RoB1
         robot.putRequest(dr);
     }
 
+    /**
+     * Adjusts robots linear-speed after angle of next turn
+     * @param heading double
+     * @param bearing double
+     */
+    private DifferentialDriveRequest adjustLinearSpeed( double heading, double bearing ){
+        dr.setLinearSpeed(linearSpeed-marginPercentage(heading, bearing));
+        return dr;
+    }
+
+    private double adjustLookAheadDistance( double heading, double bearing){
+
+        double adjusted = lookAheadDistance - marginPercentage(heading, bearing) + 0.3;
+        System.out.println(adjusted);
+        return lookAheadDistance;
+    }
+
+    private double marginPercentage( double heading, double bearing){
+        return Math.abs(heading - bearing)/360;
+    }
 
     /**
      * Checks whether the given headingAngle is within an acceptable margin of the bearingAngle
@@ -89,9 +105,9 @@ public class RoB1
      * @param bearingAngle double
      * @return boolean
      */
-    private boolean checkHeading(double headingAngle, double bearingAngle){
-        double lowerLimit = wrapAngle(bearingAngle - headingMargin);
-        double upperLimit = wrapAngle(bearingAngle + headingMargin);
+    private boolean checkIfWithinMargin(double headingAngle, double bearingAngle, double margin ){
+        double lowerLimit = wrapAngle(bearingAngle - margin);
+        double upperLimit = wrapAngle(bearingAngle + margin);
         return checkIfWithinLimits(headingAngle, lowerLimit, upperLimit);
     }
 
@@ -112,7 +128,12 @@ public class RoB1
         return limit;
     }
 
-
+    /**
+     * Calculates whether the robot should turn or left
+     * @param headingAngle double
+     * @param bearingAngle double
+     * @return double
+     */
     private double calculateTurn( double headingAngle, double bearingAngle){
         double oppositeHeadingAngle = wrapAngle(headingAngle-180);
         if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
@@ -146,7 +167,6 @@ public class RoB1
     */
    private double getHeadingAngle() throws Exception
    {
-       LocalizationResponse lr = new LocalizationResponse();
        getResponse(lr);
        double e[] = lr.getOrientation();
        double angle = 2 * Math.atan2(e[3], e[0]);
@@ -180,7 +200,6 @@ public class RoB1
     * @return Position
     */
     private Position getCurrentPosition() throws Exception {
-        LocalizationResponse lr = new LocalizationResponse();
         getResponse(lr);
         return lr.getPosition();
     }
