@@ -33,6 +33,8 @@ public class RoB1
     private double lookAheadDistance;
     private int positionsToSkip;
     private double headingMargin;
+    private double linearSpeed;
+    private double angularSpeed;
 
 
    /**
@@ -49,6 +51,8 @@ public class RoB1
        this.positionsToSkip = 5;
        this.headingMargin = 5;
        this.lookAheadDistance = 1;
+       this.linearSpeed = 0.5;
+       this.angularSpeed = 0.5;
 
    }
 
@@ -60,7 +64,7 @@ public class RoB1
         DifferentialDriveRequest dr = new DifferentialDriveRequest();
         for(int i = positionsToSkip; i < path.length; i = i+positionsToSkip) {
             dr.setAngularSpeed(calculateTurn(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
-            dr.setLinearSpeed(0.5);
+            dr.setLinearSpeed(linearSpeed);
             robot.putRequest(dr);
             //while angle isn't accurate enough, turn in most sufficient direction
             while(!checkHeading(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])) && robot.getDistanceToPosition(path[i]) > lookAheadDistance){
@@ -110,12 +114,11 @@ public class RoB1
 
 
     private double calculateTurn( double headingAngle, double bearingAngle){
-        double speed = 1;
         double oppositeHeadingAngle = wrapAngle(headingAngle-180);
         if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
-            return -speed;
+            return -angularSpeed;
         } else {
-            return speed;
+            return angularSpeed;
         }
 
     }
