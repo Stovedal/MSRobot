@@ -26,10 +26,13 @@ import static java.lang.Math.abs;
  */
 public class RoB1
 {
-   private String host;                // host and port numbers
-   private int port;
-   private ObjectMapper mapper;        // maps between JSON and Java structures
-   private RoB1 robot;
+    private String host;                // host and port numbers
+    private int port;
+    private ObjectMapper mapper;        // maps between JSON and Java structures
+    private RoB1 robot;
+    private double lookAheadDistance;
+    private int positionsToSkip;
+    private double headingMargin;
 
 
    /**
@@ -43,15 +46,102 @@ public class RoB1
        this.host = host;
        this.port = port;
        this.robot = this;
+       this.positionsToSkip = 5;
+       this.headingMargin = 5;
+       this.lookAheadDistance = 1;
+
    }
 
+    /**
+     * Runs the robot along the given path.
+     * @param path Position[]
+     */
+    public void run( Position[] path ) throws Exception {
+        DifferentialDriveRequest dr = new DifferentialDriveRequest();
+        for(int i = positionsToSkip; i < path.length; i = i+positionsToSkip) {
+            dr.setAngularSpeed(calculateTurn(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
+            dr.setLinearSpeed(0.5);
+            robot.putRequest(dr);
+            //while angle isn't accurate enough, turn in most sufficient direction
+            while(!checkHeading(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])) && robot.getDistanceToPosition(path[i]) > lookAheadDistance){
+            }
+            dr.setAngularSpeed(0);
+            robot.putRequest(dr);
+            //When angle is accurate enough, move forward until next position is within lookAheadDistance
+            while( robot.getDistanceToPosition(path[i]) > lookAheadDistance ){
+            }
 
-   /**
-    * Extract the robot heading from the response
-    * @param
+        }
+        System.out.println("done");
+        dr.setAngularSpeed(0);
+        dr.setLinearSpeed(0);
+        robot.putRequest(dr);
+    }
+
+
+    /**
+     * Checks whether the given headingAngle is within an acceptable margin of the bearingAngle
+     * @param headingAngle double
+     * @param bearingAngle double
+     * @return boolean
+     */
+    private boolean checkHeading(double headingAngle, double bearingAngle){
+        double lowerLimit = wrapAngle(bearingAngle - headingMargin);
+        double upperLimit = wrapAngle(bearingAngle + headingMargin);
+        return checkIfWithinLimits(headingAngle, lowerLimit, upperLimit);
+    }
+
+    /**
+     * Wraps an angle to the 0-360 degree spectrum
+     * @param limit double
+     * @return double
+     */
+    private double wrapAngle( double limit){
+        if(Double.compare(limit, 0) < 0){
+            limit = limit + 360;
+            return limit;
+        }
+        if(Double.compare(limit, 360) > 0){
+            limit = limit - 360;
+            return limit;
+        }
+        return limit;
+    }
+
+
+    private double calculateTurn( double headingAngle, double bearingAngle){
+        double speed = 1;
+        double oppositeHeadingAngle = wrapAngle(headingAngle-180);
+        if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
+            return -speed;
+        } else {
+            return speed;
+        }
+
+    }
+
+    /**
+     * Checks if angle is within limits
+     * @param angle double
+     * @param lowerLimit double
+     * @param upperLimit double
+     * @return boolean
+     */
+    private boolean checkIfWithinLimits(double angle, double lowerLimit, double upperLimit ){
+        if(Double.compare(lowerLimit, upperLimit) > 0){
+            return (Double.compare(angle, lowerLimit) > 0 || Double.compare(angle, upperLimit) < 0);
+        } else {
+            return (Double.compare(angle, lowerLimit) > 0 && Double.compare(angle, upperLimit) < 0);
+        }
+    }
+
+
+
+    /**
+    * Extract the robot heading from the response.
     * @return angle in degrees
     */
-   double getHeadingAngle() throws Exception
+   private double getHeadingAngle() throws Exception
    {
        LocalizationResponse lr = new LocalizationResponse();
        getResponse(lr);
@@ -74,65 +164,32 @@ public class RoB1
 
     /**
      * Get Bearing to Point
-     * @param
-     * @return
+     * @param position Position
+     * @return double
      */
-    double getBearingToPoint(Position position) throws Exception {
+    private double getBearingToPoint(Position position) throws Exception {
        return convertToDegrees(getCurrentPosition().getBearingTo(position));
     }
 
 
     /**
     * Extract the current position
-    * @param
     * @return Position
     */
-   Position getCurrentPosition() throws Exception
-   {
-       LocalizationResponse lr = new LocalizationResponse();
-       getResponse(lr);
-       return lr.getPosition();
-   }
-
-    /**
-     * Extract the current HeadingAngle
-     * @param
-     * @return Position
-     */
-    double getCurrentHeadingAngle() throws Exception
-    {
+    private Position getCurrentPosition() throws Exception {
         LocalizationResponse lr = new LocalizationResponse();
         getResponse(lr);
-        return lr.getHeadingAngle();
+        return lr.getPosition();
     }
 
     /**
      * Get Distance to point
-     * @param
+     * @param position Position
      * @return double
      */
-    double getDistanceToPosition(Position positionPoint) throws Exception {
-        return getCurrentPosition().getDistanceTo(positionPoint);
+    private double getDistanceToPosition(Position position) throws Exception {
+        return getCurrentPosition().getDistanceTo(position);
 
-    }
-
-    /**
-     * Turn to angle
-     */
-
-    void turnTo(double angle) throws Exception {
-        double currentHeadingAngle = getCurrentHeadingAngle();
-        DifferentialDriveRequest dr = new DifferentialDriveRequest();
-        dr.setAngularSpeed(0.2);
-        dr.setLinearSpeed(0);
-        putRequest(dr);
-        while(currentHeadingAngle > angle - Math.PI*0.05 &&  currentHeadingAngle < angle + Math.PI*0.05){
-            System.out.println("Turning " + currentHeadingAngle + " to " + angle);
-            currentHeadingAngle = getCurrentHeadingAngle();
-        }
-        dr.setAngularSpeed(0);
-        putRequest(dr);
-        System.out.println("Stopping " + currentHeadingAngle + " " + angle);
     }
 
 
@@ -142,7 +199,7 @@ public class RoB1
     * @return response code from the connection (the web server)
     * @throws Exception
     */
-   public int putRequest(Request r) throws Exception
+   private int putRequest(Request r) throws Exception
    {
       URL url = new URL(host + ":" + port + r.getPath());
 
@@ -176,7 +233,7 @@ public class RoB1
     * @return response same as parameter
     * @throws Exception
     */
-   public Response getResponse(Response r) throws Exception
+   private Response getResponse(Response r) throws Exception
    {
       URL url = new URL(host + ":" + port + r.getPath());
 
@@ -188,18 +245,10 @@ public class RoB1
       // map it to a Java Map
       Map<String, Object> data = mapper.readValue(in, Map.class);
       r.setData(data);
-
       in.close();
 
       return r;
    }
-
-    public void moveToPos(Step newPos) throws Exception {
-        DifferentialDriveRequest dr = new DifferentialDriveRequest();
-        LocalizationResponse lr = new LocalizationResponse();
-        Step startStep = (Step) getResponse(lr);
-        System.out.println(startStep);
-    }
 
 }
 
