@@ -35,8 +35,7 @@ public class LocalizationResponse implements Response
       double y =  (Double)position.get("Y");
       double z =  (Double)position.get("Z");
 
-      Position pos = new Position(x,y);
-      return pos;
+      return new Position(x,y);
    }
 
    // return the robot heading, i.e. in which direction it 'points'

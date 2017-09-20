@@ -9,7 +9,6 @@ public class DifferentialDriveRequest implements Request
    public DifferentialDriveRequest()
    {
       data = new HashMap<String, Object>();
-
       setLinearSpeed(0);
       setAngularSpeed(0);
    }

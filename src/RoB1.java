@@ -16,7 +16,6 @@ public class RoB1
     private String host;
     private int port;
     private ObjectMapper mapper;
-    private RoB1 robot;
     private double lookAheadDistance;
     private int positionsToSkip;
     private double headingMargin;
@@ -24,6 +23,8 @@ public class RoB1
     private double angularSpeed;
     private LocalizationResponse lr;
     private DifferentialDriveRequest dr;
+    private LaserEchoesResponse ler;
+    private LaserPropertiesResponse lpr;
 
 
    /**
@@ -36,14 +37,15 @@ public class RoB1
        this.mapper = new ObjectMapper();
        this.host = host;
        this.port = port;
-       this.robot = this;
        this.positionsToSkip = 5;
        this.headingMargin = 5;
-       this.lookAheadDistance = 0.5;
+       this.lookAheadDistance = 1;
        this.linearSpeed = 1;
-       this.angularSpeed = 1;
+       this.angularSpeed = 2;
        this.lr = new LocalizationResponse();
        this.dr = new DifferentialDriveRequest();
+       this.ler = new LaserEchoesResponse();
+       this.lpr = new LaserPropertiesResponse();
 
    }
 
@@ -53,50 +55,96 @@ public class RoB1
      */
     public void run( Position[] path ) throws Exception {
         System.out.println("Starting");
-        for(int i = positionsToSkip+20; i < path.length; i = i+positionsToSkip) {
-            dr.setAngularSpeed(calculateTurn(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
-            robot.putRequest(dr);
 
-            //while angle isn't accurate enough, turn in most sufficient direction
-            while(!checkIfWithinMargin(robot.getHeadingAngle(), robot.getBearingToPoint(path[i]), headingMargin)
-                    &&
-                    robot.getDistanceToPosition(path[i]) > lookAheadDistance ){
-                robot.putRequest(adjustLinearSpeed(robot.getHeadingAngle(), robot.getBearingToPoint(path[i])));
-            }
-
-            dr.setAngularSpeed(0);
-            robot.putRequest(dr);
-            //When angle is accurate enough, move forward until next position is within lookAheadDistance
-            while( robot.getDistanceToPosition(path[i]) > lookAheadDistance ){
-                dr.setLinearSpeed(3);
+        double averagei = 0;
+        double averageLookAheadDistance = 0;
+        double averageSpeed = 0;
+        long start = System.currentTimeMillis();
+        for(int i = positionsToSkip+30; i < path.length; i = i+positionsToSkip) {
+            while( getDistanceToPosition(path[i]) > lookAheadDistance ){
+                putRequest(adjustAngularSpeed(path[i]));
+                putRequest(adjustLinearSpeed(path[i]));
+                int laserPoint = i+positionsToSkip*2;
+                if(laserPoint < path.length){adjustLookAheadDistance(path[laserPoint]);}
+                averageSpeed = averageSpeed + (double)dr.getData().get("TargetLinearSpeed");
+                averageLookAheadDistance = averageLookAheadDistance + lookAheadDistance;
+                averagei = averagei + 1;
             }
 
         }
+        long elapsedTime = System.currentTimeMillis() - start;
+        System.out.println("Time of lap " + (elapsedTime) + " milliseconds");
+        System.out.println("Averagespeed " + (averageSpeed/averagei));
+        System.out.println("Average LookAheadDistance " + (averageLookAheadDistance/averagei));
         System.out.println("done");
         dr.setAngularSpeed(0);
         dr.setLinearSpeed(0);
-        robot.putRequest(dr);
+        putRequest(dr);
     }
 
     /**
      * Adjusts robots linear-speed after angle of next turn
-     * @param heading double
-     * @param bearing double
+     * @param nextPosition Position
      */
-    private DifferentialDriveRequest adjustLinearSpeed( double heading, double bearing ){
-        dr.setLinearSpeed(linearSpeed-marginPercentage(heading, bearing));
+    private DifferentialDriveRequest adjustLinearSpeed( Position nextPosition ) throws Exception {
+        double margin = marginPercentage(getHeadingAngle(), getBearingToPoint(nextPosition));
+        if(Double.compare(margin, 0.2) < 0){
+            dr.setLinearSpeed(linearSpeed-(linearSpeed * margin));
+        } else {
+            dr.setLinearSpeed(0);
+        }
         return dr;
     }
 
-    private double adjustLookAheadDistance( double heading, double bearing){
+    private void adjustLookAheadDistance( Position nextPosition ) throws Exception {
+        getResponse(ler);
+        double bearing = getBearingToPoint(nextPosition);
+        double heading = getHeadingAngle();
+        int margin;
+        if(!checkIfWithinLimits(bearing, heading, wrapAngle(heading+180))){
+            ///bearing-point left of heading
+            margin = -marginInDegrees(heading , bearing);
+        } else {
+            //bearing-point right of heading
+            margin = marginInDegrees(bearing, heading);
+        }
 
-        double adjusted = lookAheadDistance - marginPercentage(heading, bearing) + 0.3;
-        System.out.println(adjusted);
-        return lookAheadDistance;
+        int centerPoint = 136 + margin;
+        if(Math.abs(margin)>30){
+            positionsToSkip = 2;
+        } else if(Math.abs(margin) > 10) {
+            positionsToSkip = 5;
+        } else if(Math.abs(margin) > 2){
+            positionsToSkip = 10;
+        } else {
+            positionsToSkip = 15;
+        }
+
+        int laserMargin = 20;
+        if(centerPoint<270-laserMargin && centerPoint > laserMargin) {
+            double adjusted = ler.getEchoes()[centerPoint];
+            for (int i = centerPoint - laserMargin; i < centerPoint + laserMargin; i++) {
+                if (Double.compare(ler.getEchoes()[i], adjusted) < 0) {
+                    adjusted = ler.getEchoes()[i];
+                }
+            }
+            lookAheadDistance = adjusted * 0.5;
+        }
     }
 
     private double marginPercentage( double heading, double bearing){
-        return Math.abs(heading - bearing)/360;
+        Integer degree =  marginInDegrees(heading, bearing);
+        return new Double(degree.toString())/360;
+    }
+
+    private int marginInDegrees( double var1, double var2){
+        int margin1 = (int) wrapAngle(Math.round( var2 - var1 ));
+        int margin2 = (int) wrapAngle(Math.round( var1 - var2 ));
+        if (margin1 > margin2){
+            return margin2;
+        } else {
+            return  margin1;
+        }
     }
 
     /**
@@ -136,12 +184,29 @@ public class RoB1
      */
     private double calculateTurn( double headingAngle, double bearingAngle){
         double oppositeHeadingAngle = wrapAngle(headingAngle-180);
-        if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
-            return -angularSpeed;
+        double margin = marginPercentage(headingAngle,bearingAngle);
+        double speed;
+        if(Double.compare(margin, 0.1) < 0 ){
+            speed = 0.5;
         } else {
-            return angularSpeed;
+            speed = angularSpeed;
+        }
+        if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
+            return -speed;
+        } else {
+            return speed;
         }
 
+    }
+
+    private DifferentialDriveRequest adjustAngularSpeed( Position nextPosition) throws Exception {
+        if(!checkIfWithinMargin(getHeadingAngle(), getBearingToPoint(nextPosition), headingMargin)) {
+            dr.setAngularSpeed(calculateTurn(getHeadingAngle(), getBearingToPoint(nextPosition)));
+        } else {
+            dr.setAngularSpeed(0);
+        }
+        System.out.println(dr.getData().get("TargetAngularSpeed"));
+        return dr;
     }
 
     /**
@@ -183,6 +248,16 @@ public class RoB1
         } else {
             return angle;
         }
+    }
+
+    private void nudgeLeft() throws Exception {
+        dr.setAngularSpeed(angularSpeed);
+        putRequest(dr);
+    }
+
+    private void nudgeRight() throws Exception {
+        dr.setAngularSpeed(-angularSpeed);
+        putRequest(dr);
     }
 
     /**

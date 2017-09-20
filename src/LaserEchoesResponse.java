@@ -14,12 +14,17 @@ public class LaserEchoesResponse implements Response
    public double[] getEchoes()
    {
       ArrayList echoes = (ArrayList)data.get("Echoes");
-      
+
       Object[] list = echoes.toArray();
       double[] result = new double[list.length];
-      for (int i= 0 ; i < result.length; i++)
-         result[i] = (Double)list[i];    // unboxing
-      
+      for (int i= 0 ; i < result.length; i++) {
+         if(list[i].getClass() == Double.class){
+            result[i] = (Double) list[i];
+         } else {
+            result[i] = new Double(list[i].toString());
+         }
+      }
+
       return result;
    }
 
