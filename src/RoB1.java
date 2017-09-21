@@ -56,22 +56,27 @@ public class RoB1
     public void run( Position[] path ) throws Exception {
         System.out.println("Starting");
 
+        //Set up tracking variables
         double averagei = 0;
         double averageLookAheadDistance = 0;
         double averageSpeed = 0;
         long start = System.currentTimeMillis();
-        for(int i = positionsToSkip+30; i < path.length; i = i+positionsToSkip) {
+
+        for(int i = positionsToSkip*5; i < path.length; i = i+positionsToSkip) {
             while( getDistanceToPosition(path[i]) > lookAheadDistance ){
                 putRequest(adjustAngularSpeed(path[i]));
                 putRequest(adjustLinearSpeed(path[i]));
-                int laserPoint = i+positionsToSkip*2;
+                int laserPoint = 20;
                 if(laserPoint < path.length){adjustLookAheadDistance(path[laserPoint]);}
+
+                //Tracking
                 averageSpeed = averageSpeed + (double)dr.getData().get("TargetLinearSpeed");
                 averageLookAheadDistance = averageLookAheadDistance + lookAheadDistance;
                 averagei = averagei + 1;
             }
 
         }
+
         long elapsedTime = System.currentTimeMillis() - start;
         System.out.println("Time of lap " + (elapsedTime) + " milliseconds");
         System.out.println("Averagespeed " + (averageSpeed/averagei));
@@ -96,6 +101,22 @@ public class RoB1
         return dr;
     }
 
+    /**
+     * Adjusts the angular speed of the robot according to the angle to next position
+     * @param nextPosition Position
+     * @return DifferentialDriveRequest
+     * @throws Exception
+     */
+    private DifferentialDriveRequest adjustAngularSpeed( Position nextPosition) throws Exception {
+        if(!checkIfWithinMargin(getHeadingAngle(), getBearingToPoint(nextPosition), headingMargin)) {
+            dr.setAngularSpeed(calculateTurn(nextPosition));
+        } else {
+            dr.setAngularSpeed(0);
+        }
+        return dr;
+    }
+
+
     private void adjustLookAheadDistance( Position nextPosition ) throws Exception {
         getResponse(ler);
         double bearing = getBearingToPoint(nextPosition);
@@ -110,14 +131,17 @@ public class RoB1
         }
 
         int centerPoint = 136 + margin;
+        int standard = (int)Math.round(0.5);
+        if(standard<2){ standard = 2; }
+
         if(Math.abs(margin)>30){
-            positionsToSkip = 2;
+            positionsToSkip = Math.round(standard/2);
         } else if(Math.abs(margin) > 10) {
-            positionsToSkip = 5;
+            positionsToSkip = standard;
         } else if(Math.abs(margin) > 2){
-            positionsToSkip = 10;
+            positionsToSkip = 2*standard;
         } else {
-            positionsToSkip = 15;
+            positionsToSkip = 3*standard;
         }
 
         int laserMargin = 20;
@@ -148,15 +172,15 @@ public class RoB1
     }
 
     /**
-     * Checks whether the given headingAngle is within an acceptable margin of the bearingAngle
-     * @param headingAngle double
-     * @param bearingAngle double
+     * Checks whether the given headingAngle is within an acceptable margin of the bearing
+     * @param heading double
+     * @param bearing double
      * @return boolean
      */
-    private boolean checkIfWithinMargin(double headingAngle, double bearingAngle, double margin ){
-        double lowerLimit = wrapAngle(bearingAngle - margin);
-        double upperLimit = wrapAngle(bearingAngle + margin);
-        return checkIfWithinLimits(headingAngle, lowerLimit, upperLimit);
+    private boolean checkIfWithinMargin(double heading, double bearing, double margin ){
+        double lowerLimit = wrapAngle(bearing - margin);
+        double upperLimit = wrapAngle(bearing + margin);
+        return checkIfWithinLimits(heading, lowerLimit, upperLimit);
     }
 
     /**
@@ -177,36 +201,25 @@ public class RoB1
     }
 
     /**
-     * Calculates whether the robot should turn or left
-     * @param headingAngle double
-     * @param bearingAngle double
+     * Calculates whether the robot should turn right or left and at what turningspeed
+     * @param nextPosition Position
      * @return double
      */
-    private double calculateTurn( double headingAngle, double bearingAngle){
-        double oppositeHeadingAngle = wrapAngle(headingAngle-180);
-        double margin = marginPercentage(headingAngle,bearingAngle);
+    private double calculateTurn( Position nextPosition) throws Exception {
+        double oppositeHeadingAngle = wrapAngle(getHeadingAngle()-180);
+        double margin = marginPercentage(getBearingToPoint(nextPosition), getHeadingAngle());
         double speed;
         if(Double.compare(margin, 0.1) < 0 ){
             speed = 0.5;
         } else {
             speed = angularSpeed;
         }
-        if(!checkIfWithinLimits(bearingAngle,headingAngle,oppositeHeadingAngle)){
+        if(!checkIfWithinLimits(getBearingToPoint(nextPosition),getHeadingAngle(),oppositeHeadingAngle)){
             return -speed;
         } else {
             return speed;
         }
 
-    }
-
-    private DifferentialDriveRequest adjustAngularSpeed( Position nextPosition) throws Exception {
-        if(!checkIfWithinMargin(getHeadingAngle(), getBearingToPoint(nextPosition), headingMargin)) {
-            dr.setAngularSpeed(calculateTurn(getHeadingAngle(), getBearingToPoint(nextPosition)));
-        } else {
-            dr.setAngularSpeed(0);
-        }
-        System.out.println(dr.getData().get("TargetAngularSpeed"));
-        return dr;
     }
 
     /**

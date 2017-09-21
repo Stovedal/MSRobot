@@ -6,16 +6,19 @@ import java.util.Map;
 
 public class Main {
 
-
     public static void main(String[] args) throws Exception {
-
         Position[] path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\SofaAndBench.json");
         RoB1 robot = new RoB1("http://127.0.0.1", 50000);
         robot.run(path);
-
     }
 
 
+    /**
+     * Reads path given as json and returns it as an array of Positions
+     * @param pathString String
+     * @return Position[]
+     * @throws Exception
+     */
     private static Position[] readPath( String pathString ) throws Exception {
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 new FileInputStream(new File(pathString))));
@@ -35,7 +38,6 @@ public class Main {
             path[index] = new Position(x, y);
             index++;
         }
-
         return path;
     }
 
