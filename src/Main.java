@@ -9,7 +9,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Position[] path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\SofaAndBench.json");
         RoB1 robot = new RoB1("http://127.0.0.1", 50000);
-        robot.run(path);
+        for(int i = 0 ; i <1; i++) {
+            robot.run(path);
+        }
     }
 
 

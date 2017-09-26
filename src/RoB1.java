@@ -25,6 +25,8 @@ public class RoB1
     private DifferentialDriveRequest dr;
     private LaserEchoesResponse ler;
     private LaserPropertiesResponse lpr;
+    private int positionGap;
+    private double DistanceToObstacle;
 
 
    /**
@@ -54,24 +56,28 @@ public class RoB1
      * @param path Position[]
      */
     public void run( Position[] path ) throws Exception {
-        System.out.println("Starting");
-
+        System.out.println("Starting " + path.length);
+        positionGap = Math.round(path.length/340);
         //Set up tracking variables
         double averagei = 0;
         double averageLookAheadDistance = 0;
         double averageSpeed = 0;
+        int averageSkippedPositions = 0;
         long start = System.currentTimeMillis();
 
-        for(int i = positionsToSkip*5; i < path.length; i = i+positionsToSkip) {
+        for(int i = positionsToSkip; i < path.length; i = i+positionsToSkip) {
             while( getDistanceToPosition(path[i]) > lookAheadDistance ){
                 putRequest(adjustAngularSpeed(path[i]));
                 putRequest(adjustLinearSpeed(path[i]));
-                int laserPoint = 20;
-                if(laserPoint < path.length){adjustLookAheadDistance(path[laserPoint]);}
+                int laserPoint = (int)Math.round(20*lookAheadDistance) ;
+                if(laserPoint+i < path.length){
+                    scan(path[i+laserPoint]);
+                }
 
                 //Tracking
                 averageSpeed = averageSpeed + (double)dr.getData().get("TargetLinearSpeed");
                 averageLookAheadDistance = averageLookAheadDistance + lookAheadDistance;
+                averageSkippedPositions = positionsToSkip + averageSkippedPositions;
                 averagei = averagei + 1;
             }
 
@@ -81,6 +87,7 @@ public class RoB1
         System.out.println("Time of lap " + (elapsedTime) + " milliseconds");
         System.out.println("Averagespeed " + (averageSpeed/averagei));
         System.out.println("Average LookAheadDistance " + (averageLookAheadDistance/averagei));
+        System.out.println("Average skipped positions " + (averageSkippedPositions/averagei));
         System.out.println("done");
         dr.setAngularSpeed(0);
         dr.setLinearSpeed(0);
@@ -93,8 +100,8 @@ public class RoB1
      */
     private DifferentialDriveRequest adjustLinearSpeed( Position nextPosition ) throws Exception {
         double margin = marginPercentage(getHeadingAngle(), getBearingToPoint(nextPosition));
-        if(Double.compare(margin, 0.2) < 0){
-            dr.setLinearSpeed(linearSpeed-(linearSpeed * margin));
+        if(Double.compare(margin, 0.3) < 0){
+            dr.setLinearSpeed(linearSpeed);
         } else {
             dr.setLinearSpeed(0);
         }
@@ -108,7 +115,9 @@ public class RoB1
      * @throws Exception
      */
     private DifferentialDriveRequest adjustAngularSpeed( Position nextPosition) throws Exception {
-        if(!checkIfWithinMargin(getHeadingAngle(), getBearingToPoint(nextPosition), headingMargin)) {
+        getResponse(ler);
+        if(!checkIfWithinMargin(getHeadingAngle(), getBearingToPoint(nextPosition), headingMargin) &&
+                Double.compare(getDistanceToObstacle(0,60), 0.5)>0){
             dr.setAngularSpeed(calculateTurn(nextPosition));
         } else {
             dr.setAngularSpeed(0);
@@ -116,45 +125,88 @@ public class RoB1
         return dr;
     }
 
-
-    private void adjustLookAheadDistance( Position nextPosition ) throws Exception {
+    /**
+     * Scans the surroundings and 
+     * @param nextPosition
+     * @throws Exception
+     */
+    private void scan( Position nextPosition ) throws Exception {
         getResponse(ler);
-        double bearing = getBearingToPoint(nextPosition);
-        double heading = getHeadingAngle();
-        int margin;
-        if(!checkIfWithinLimits(bearing, heading, wrapAngle(heading+180))){
-            ///bearing-point left of heading
-            margin = -marginInDegrees(heading , bearing);
-        } else {
-            //bearing-point right of heading
-            margin = marginInDegrees(bearing, heading);
+        int margin = headingToBearingMargin(nextPosition);
+        adjustLookAheadDistance(margin);
+        adjustPositionsToSkip(margin);
+        avoidObstacles();
+
+    }
+
+    /**
+     * Uses laser to avoid obstacles
+     * @throws Exception
+     */
+    private void avoidObstacles() throws Exception {
+        double allowedMargin = 0.5;
+        int laserMargin = 45;
+        double speed = 1;
+        int angle = 45;
+        double leftDistanceToObstacle = getDistanceToObstacle(-angle,laserMargin);
+        double rightDistanceToObstacle = getDistanceToObstacle(angle,laserMargin);
+        if(Double.compare(leftDistanceToObstacle, allowedMargin ) < 0 ){
+            dr.setAngularSpeed(speed);
+            putRequest(dr);
         }
+        if(Double.compare(rightDistanceToObstacle, allowedMargin ) < 0 ){
+            dr.setAngularSpeed(-speed);
+            putRequest(dr);
 
-        int centerPoint = 136 + margin;
-        int standard = (int)Math.round(0.5);
-        if(standard<2){ standard = 2; }
-
-        if(Math.abs(margin)>30){
-            positionsToSkip = Math.round(standard/2);
-        } else if(Math.abs(margin) > 10) {
-            positionsToSkip = standard;
-        } else if(Math.abs(margin) > 2){
-            positionsToSkip = 2*standard;
-        } else {
-            positionsToSkip = 3*standard;
-        }
-
-        int laserMargin = 20;
-        if(centerPoint<270-laserMargin && centerPoint > laserMargin) {
-            double adjusted = ler.getEchoes()[centerPoint];
-            for (int i = centerPoint - laserMargin; i < centerPoint + laserMargin; i++) {
-                if (Double.compare(ler.getEchoes()[i], adjusted) < 0) {
-                    adjusted = ler.getEchoes()[i];
-                }
-            }
-            lookAheadDistance = adjusted * 0.5;
         }
     }
+
+    private int headingToBearingMargin( Position nextPosition ) throws Exception {
+        double bearing = getBearingToPoint(nextPosition);
+        double heading = getHeadingAngle();
+        if(!checkIfWithinLimits(bearing, heading, wrapAngle(heading+180))){
+            ///bearing-point left of heading
+            return -marginInDegrees(heading , bearing);
+        } else {
+            //bearing-point right of heading
+            return marginInDegrees(bearing, heading);
+        }
+    }
+
+    private double getDistanceToObstacle(int heading, int margin ) throws Exception {
+        //getResponse(ler);
+        int centerPoint = 136 + heading;
+        double distance = ler.getEchoes()[centerPoint];
+        for (int i = centerPoint - margin; i < centerPoint + margin; i++) {
+            if (Double.compare(ler.getEchoes()[i], distance) < 0) {
+                distance = ler.getEchoes()[i];
+            }
+        }
+        return distance;
+
+    }
+
+    private void adjustLookAheadDistance( int margin ) throws Exception {
+        int centerPoint = 136 + margin;
+        int laserMargin = 30;
+        if(centerPoint<270-laserMargin && centerPoint > laserMargin) {
+            lookAheadDistance = getDistanceToObstacle(margin, laserMargin) * 0.5;
+        }
+    }
+
+    private void adjustPositionsToSkip(int margin){
+        if(Math.abs(margin)>60){
+            positionsToSkip = 2;
+        } else if(Math.abs(margin) > 40) {
+            positionsToSkip = 5;
+        } else if(Math.abs(margin) > 10){
+            positionsToSkip = 10;
+        } else {
+            positionsToSkip = 15;
+        }
+    }
+
+
 
     private double marginPercentage( double heading, double bearing){
         Integer degree =  marginInDegrees(heading, bearing);
@@ -209,6 +261,7 @@ public class RoB1
         double oppositeHeadingAngle = wrapAngle(getHeadingAngle()-180);
         double margin = marginPercentage(getBearingToPoint(nextPosition), getHeadingAngle());
         double speed;
+
         if(Double.compare(margin, 0.1) < 0 ){
             speed = 0.5;
         } else {
@@ -263,15 +316,6 @@ public class RoB1
         }
     }
 
-    private void nudgeLeft() throws Exception {
-        dr.setAngularSpeed(angularSpeed);
-        putRequest(dr);
-    }
-
-    private void nudgeRight() throws Exception {
-        dr.setAngularSpeed(-angularSpeed);
-        putRequest(dr);
-    }
 
     /**
      * Get Bearing to Point
