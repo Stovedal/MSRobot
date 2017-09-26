@@ -7,16 +7,14 @@ import java.util.Map;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        Position[] path = readPath("C:\\Users\\Sofia\\IdeaProjects\\MSRobot\\src\\SofaAndBench.json");
+        Position[] path = readPath(args[0]);
         RoB1 robot = new RoB1("http://127.0.0.1", 50000);
-        for(int i = 0 ; i <1; i++) {
-            robot.run(path);
-        }
+        robot.run(path, new Double(args[1]));
     }
 
 
     /**
-     * Reads path given as json and returns it as an array of Positions
+     * Reads path given as json/String and returns it as an array of Positions
      * @param pathString String
      * @return Position[]
      * @throws Exception
