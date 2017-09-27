@@ -3,7 +3,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * RoBi interfaces to the (real or virtual) robot over a network connection.
@@ -30,8 +30,7 @@ public class RoB1
     * @param host normally http://127.0.0.1
     * @param port normally 50000
     */
-   public RoB1(String host, int port)
-   {
+   public RoB1(String host, int port) {
        this.host = host;
        this.port = port;
    }
@@ -47,11 +46,11 @@ public class RoB1
         int lastPosition = path.length-1;
         //Start moving
         for(int i = 0; i < path.length; i = i+positionsToSkip) {
-            while( getDistanceToPosition(path[i]) > lookAheadDistance ){
+            while(Double.compare(getDistanceToPosition(path[i]), lookAheadDistance)>0 ){
                 getResponse(ler);
                 adjustAngularSpeed(path[i]);
                 adjustLinearSpeed(path[i]);
-                laserPositionsToSkip = (int)Math.round(20*lookAheadDistance) ;
+                laserPositionsToSkip = (int)Math.round(20*lookAheadDistance+5) ;
                 if(laserPositionsToSkip+i < path.length){
                     scan(path[i+laserPositionsToSkip]);
                 }
@@ -59,7 +58,7 @@ public class RoB1
         }
 
         //Move to last position
-        while( getDistanceToPosition(path[lastPosition]) > lookAheadDistance ){
+        while( Double.compare(getDistanceToPosition(path[lastPosition]), 0.4) < 0 ){
             getResponse(ler);
             adjustAngularSpeed(path[lastPosition]);
             adjustLinearSpeed(path[lastPosition]);
@@ -79,7 +78,7 @@ public class RoB1
      */
     private void adjustLinearSpeed( Position nextPosition ) throws Exception {
         double margin = marginPercentage(getHeadingAngle(), getBearingToPoint(nextPosition));
-        if(Double.compare(margin, 0.3) < 0){
+        if(Double.compare(margin, 0.20) < 0){
             dr.setLinearSpeed(linearSpeed);
 
         } else {
@@ -118,18 +117,11 @@ public class RoB1
      * @throws Exception
      */
     private void avoidObstacles() throws Exception {
-        double allowedMargin;
-        int angle;
-        double speed = 0.5;
+        double allowedMargin = lookAheadDistance;
+        int angle = 20;
+        double speed = 0.7;
         if(Double.compare(lookAheadDistance, 0.7)<0) {
             allowedMargin = 0.7;
-            angle = 20;
-        } else if(Double.compare(lookAheadDistance, 1.5)<0){
-            allowedMargin = lookAheadDistance;
-            angle = 15;
-        } else {
-            allowedMargin = 1.5;
-            angle = 15;
         }
         double leftObstacle = distanceToObstacle(-angle,angle);
         double rightObstacle = distanceToObstacle(angle,angle);
@@ -189,9 +181,19 @@ public class RoB1
      */
     private void adjustLookAheadDistance( int headingToBearingMargin ) throws Exception {
         int centerPoint = 136 + headingToBearingMargin;
-        int laserMargin = 30;
+        int laserMargin = 40;
         if(centerPoint<270-laserMargin && centerPoint > laserMargin) {
-            lookAheadDistance = distanceToObstacle(headingToBearingMargin, laserMargin) * 0.5;
+            lookAheadDistance = limitLookAheadDistance(distanceToObstacle(headingToBearingMargin, laserMargin));
+        }
+    }
+
+    private double limitLookAheadDistance(double lookAheadDistance){
+        if(Double.compare(lookAheadDistance,1.5)>0){
+            return 1.5;
+        } else if(Double.compare(lookAheadDistance,0)<0.1){
+            return 0.1;
+        } else {
+            return lookAheadDistance;
         }
     }
 
@@ -278,7 +280,7 @@ public class RoB1
         double margin = marginPercentage(getBearingToPoint(nextPosition), getHeadingAngle());
         double speed;
 
-        if(Double.compare(margin, 0.1) < 0 ){
+        if(Double.compare(margin, 0.07) < 0 ){
             speed = 0.5;
         } else {
             speed = angularSpeed;

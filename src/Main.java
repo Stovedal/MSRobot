@@ -1,4 +1,5 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.fasterxml.jackson.databind.*;
 
 import java.io.*;
 import java.util.Collection;
@@ -11,7 +12,6 @@ public class Main {
         RoB1 robot = new RoB1("http://127.0.0.1", 50000);
         robot.run(path, new Double(args[1]));
     }
-
 
     /**
      * Reads path given as json/String and returns it as an array of Positions
