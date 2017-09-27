@@ -50,7 +50,7 @@ public class RoB1
                 getResponse(ler);
                 adjustAngularSpeed(path[i]);
                 adjustLinearSpeed(path[i]);
-                laserPositionsToSkip = (int)Math.round(20*lookAheadDistance+5) ;
+                laserPositionsToSkip = (int)Math.round(20*lookAheadDistance+positionsToSkip) ;
                 if(laserPositionsToSkip+i < path.length){
                     scan(path[i+laserPositionsToSkip]);
                 }
@@ -58,7 +58,7 @@ public class RoB1
         }
 
         //Move to last position
-        while( Double.compare(getDistanceToPosition(path[lastPosition]), 0.4) < 0 ){
+        while( Double.compare(getDistanceToPosition(path[lastPosition]), 0.2) < 0 ){
             getResponse(ler);
             adjustAngularSpeed(path[lastPosition]);
             adjustLinearSpeed(path[lastPosition]);
