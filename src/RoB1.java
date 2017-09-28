@@ -19,7 +19,7 @@ public class RoB1
     private double lookAheadDistance = 0.4;
     private int positionsToSkip = 5;
     private double headingMargin = 5;
-    private double linearSpeed = 1;
+    private double linearSpeed;
     private double angularSpeed = 2;
     private LocalizationResponse lr = new LocalizationResponse();
     private DifferentialDriveRequest dr = new DifferentialDriveRequest();
@@ -44,7 +44,7 @@ public class RoB1
         long start = System.currentTimeMillis();
         int laserPositionsToSkip;
         int lastPosition = path.length-1;
-        //Start moving
+        //Move along path
         for(int i = 0; i < path.length; i = i+positionsToSkip) {
             while(Double.compare(getDistanceToPosition(path[i]), lookAheadDistance)>0 ){
                 getResponse(ler);
@@ -57,7 +57,7 @@ public class RoB1
             }
         }
 
-        //Move to last position
+        //Get that last position
         while( Double.compare(getDistanceToPosition(path[lastPosition]), 0.2) < 0 ){
             getResponse(ler);
             adjustAngularSpeed(path[lastPosition]);
@@ -66,7 +66,6 @@ public class RoB1
 
         //Stop and print time of lap
         long elapsedTime = System.currentTimeMillis() - start;
-        System.out.println("Time of lap " + (elapsedTime) + " milliseconds");
         dr.setAngularSpeed(0);
         dr.setLinearSpeed(0);
         putRequest(dr);

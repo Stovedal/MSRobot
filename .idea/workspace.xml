@@ -2,22 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="524faa7f-5a52-49c2-b29e-284fcd4247e4" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/jackson_core_2_0_5.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/jackson_databind_2_0_5.xml" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/lib/gson-2.6.2.jar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/libraries/gson_2_6_2.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/mods/jackson-databind-2.0.5.jar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/MSRobot/RobotCommunication.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/Pose.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/RobotCommunication.java" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/.idea/lib/jackson-annotations-2.0.5.jar" afterPath="$PROJECT_DIR$/src/jars/jackson-annotations-2.0.5.jar" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/.idea/lib/jackson-core-2.0.5.jar" afterPath="$PROJECT_DIR$/src/jars/jackson-core-2.0.5.jar" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/.idea/lib/jackson-databind-2.0.5.jar" afterPath="$PROJECT_DIR$/src/jars/jackson-databind-2.0.5.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/MSRobot/Main.class" afterPath="$PROJECT_DIR$/out/production/MSRobot/Main.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/jackson_annotations_2_0_5.xml" afterPath="$PROJECT_DIR$/.idea/libraries/jackson_annotations_2_0_5.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RoB1.class" afterPath="$PROJECT_DIR$/src/RoB1.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/MSRobot.iml" afterPath="$PROJECT_DIR$/MSRobot.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Main.java" afterPath="$PROJECT_DIR$/src/Main.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RoB1.java" afterPath="$PROJECT_DIR$/src/RoB1.java" />
     </list>
     <ignored path="MSRobot.iws" />
@@ -43,8 +29,8 @@
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-52">
-              <caret line="19" column="24" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+            <state relative-caret-position="363">
+              <caret line="11" column="57" selection-start-line="11" selection-start-column="57" selection-end-line="11" selection-end-column="57" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -55,8 +41,8 @@
       <file leaf-file-name="RoB1.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/RoB1.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="356">
-              <caret line="60" column="77" selection-start-line="60" selection-start-column="77" selection-end-line="60" selection-end-column="77" />
+            <state relative-caret-position="620">
+              <caret line="83" column="77" selection-start-line="83" selection-start-column="77" selection-end-line="83" selection-end-column="77" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -140,17 +126,16 @@
         <option value="$PROJECT_DIR$/src/LocalizationResponse.java" />
         <option value="$PROJECT_DIR$/src/Orientation.java" />
         <option value="$PROJECT_DIR$/src/FromBed.json" />
-        <option value="$PROJECT_DIR$/src/Main.java" />
         <option value="$PROJECT_DIR$/src/Main.class" />
         <option value="$PROJECT_DIR$/.idea/libraries/jackson_annotations_2_0_5.xml" />
+        <option value="$PROJECT_DIR$/src/Main.java" />
         <option value="$PROJECT_DIR$/src/RoB1.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1523" />
-    <option name="y" value="38" />
-    <option name="width" value="1688" />
+    <option name="x" value="1232" />
+    <option name="width" value="2860" />
     <option name="height" value="1693" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -570,7 +555,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1523" y="38" width="1688" height="1693" extended-state="0" />
+    <frame x="1232" y="0" width="2860" height="1693" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -584,7 +569,7 @@
       <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3855756" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32973316" sideWeight="0.49029127" order="5" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3295703" sideWeight="0.49029127" order="5" side_tool="false" content_ui="combo" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24726854" sideWeight="0.50970876" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -613,7 +598,7 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3855756" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32973316" sideWeight="0.49029127" order="5" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3295703" sideWeight="0.49029127" order="5" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297659" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24726854" sideWeight="0.50970876" order="1" side_tool="true" content_ui="tabs" />
@@ -990,8 +975,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-52">
-          <caret line="19" column="24" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+        <state relative-caret-position="363">
+          <caret line="11" column="57" selection-start-line="11" selection-start-column="57" selection-end-line="11" selection-end-column="57" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -1000,8 +985,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/RoB1.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="60" column="77" selection-start-line="60" selection-start-column="77" selection-end-line="60" selection-end-column="77" />
+        <state relative-caret-position="620">
+          <caret line="83" column="77" selection-start-line="83" selection-start-column="77" selection-end-line="83" selection-end-column="77" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
