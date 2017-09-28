@@ -2,7 +2,7 @@ import java.util.Map;
 
 public interface Request
 {
-   public Map<String, Object> getData();
-   public String getPath();
+   Map<String, Object> getData();
+   String getPath();
 }
 
